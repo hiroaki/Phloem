@@ -1,0 +1,74 @@
+require "rails_helper"
+
+RSpec.describe GraphHopperAdapter do
+  describe "#route" do
+    it "maps a GraphHopper response into the normalized route shape" do
+      stub_request(:post, "http://graphhopper.test/route")
+        .with(
+          body: {
+            profile: "car",
+            points: [[139.76, 35.68], [139.77, 35.69]],
+            instructions: false,
+            calc_points: true,
+            points_encoded: false
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+        .to_return(
+          status: 200,
+          body: {
+            paths: [
+              {
+                distance: 1234.5,
+                time: 456700,
+                points: {
+                  type: "LineString",
+                  coordinates: [[139.76, 35.68], [139.77, 35.69]]
+                }
+              }
+            ]
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      adapter = described_class.new(base_url: "http://graphhopper.test", timeout: 1.0)
+
+      expect(
+        adapter.route(
+          profile: "car",
+          points: [
+            { lat: 35.68, lon: 139.76 },
+            { lat: 35.69, lon: 139.77 }
+          ],
+          options: {}
+        )
+      ).to eq(
+        provider: "graphhopper",
+        geometry: {
+          "type" => "LineString",
+          "coordinates" => [[139.76, 35.68], [139.77, 35.69]]
+        },
+        distance_meters: 1234.5,
+        duration_seconds: 456.7,
+        warnings: []
+      )
+    end
+
+    it "raises a timeout error when the provider times out" do
+      stub_request(:post, "http://graphhopper.test/route").to_timeout
+
+      adapter = described_class.new(base_url: "http://graphhopper.test", timeout: 1.0)
+
+      expect do
+        adapter.route(
+          profile: "car",
+          points: [
+            { lat: 35.68, lon: 139.76 },
+            { lat: 35.69, lon: 139.77 }
+          ],
+          options: {}
+        )
+      end.to raise_error(UpstreamTimeoutError)
+    end
+  end
+end
