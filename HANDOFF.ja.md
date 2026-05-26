@@ -17,7 +17,7 @@ Phloem は、route 系の地理 API を provider 非依存の単一 HTTP イン�
 - v1 の backend provider: GraphHopper のみ
 - 将来の設計目標: OSRM 互換および Valhalla 系 provider を adapter で追加可能にする
 - 内部設計では将来の `match` と `capabilities` エンドポイントを考慮する
-- 最初のローカル立ち上げでは認証を必須にしないが、固定 API キー認証を追加しやすい境界を残す
+- 最初のローカル立ち上げでは認証を必須にしないが、`PHLOEM_API_KEY` による API キー認証を `POST /route` に任意で適用できる
 - request history、quota、analytics、admin UI が必要になるまで DB は導入しない
 
 ## アーキテクチャ方針
@@ -40,8 +40,8 @@ v1 の公開 API の方向性:
 
 1. `POST /route` の public JSON schema を異常系 spec まで含めて固める。
 2. 将来の `route`、`match`、`capabilities` 拡張に耐える provider interface を維持する。
-3. happy path が安定したら optional な固定 API-key auth を追加する。
-4. 最小の `/health` または `/capabilities` を次の slice に含めるか決める。
+3. optional な固定 API-key auth を軽量な運用設定として維持する。
+4. health check は当面 Rails 標準の `GET /up` を使い、より豊かな endpoint が必要かは運用で判断する。
 5. caching を最初の運用強化に含めるか、その直後にするか決める。
 
 ## 重要な制約
@@ -56,7 +56,7 @@ v1 の公開 API の方向性:
 - `POST /route` の正確な request JSON schema
 - 正規化 response の正確な形式
 - `provider` を response body に含めるか、metadata のみにするか
-- 最初の実装で最小の `/health` または `/capabilities` を入れるか
+- Rails 標準の `GET /up` を超える `/capabilities` が必要か
 - caching を最初の milestone に含めるか、その直後にするか
 
 ## 想定される初期ディレクトリ構成

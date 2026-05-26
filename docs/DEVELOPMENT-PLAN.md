@@ -58,7 +58,8 @@ Build Phloem as a standalone Rails API-only application that provides a thin, no
 ### Milestone 5: Operational hardening
 - add timeout handling
 - add upstream error mapping
-- add optional fixed API-key auth seam
+- add optional API-key auth seam
+- use Rails `GET /up` for health checks unless richer status reporting is required
 - decide whether to add caching immediately or as the next milestone
 
 ### Milestone 6: Verification

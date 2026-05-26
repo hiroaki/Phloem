@@ -59,6 +59,7 @@ Phloem を、まずは GraphHopper の前段に置く薄い正規化 routing fac
 - timeout handling を追加する
 - upstream error mapping を追加する
 - optional な固定 API-key auth seam を追加する
+- health check は Rails 標準の `GET /up` を使う
 - caching をすぐ入れるか次の milestone に回すか決める
 
 ### マイルストーン 6: 検証

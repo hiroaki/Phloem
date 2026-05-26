@@ -1,6 +1,14 @@
 require "rails_helper"
 
 RSpec.describe "POST /route", type: :request do
+  around do |example|
+    original_api_key = ENV["PHLOEM_API_KEY"]
+    configured_api_key.nil? ? ENV.delete("PHLOEM_API_KEY") : ENV["PHLOEM_API_KEY"] = configured_api_key
+    example.run
+  ensure
+    original_api_key.nil? ? ENV.delete("PHLOEM_API_KEY") : ENV["PHLOEM_API_KEY"] = original_api_key
+  end
+
   let(:valid_params) do
     {
       profile: "car",
@@ -11,6 +19,7 @@ RSpec.describe "POST /route", type: :request do
       options: {}
     }
   end
+  let(:configured_api_key) { nil }
 
   it "returns a normalized route payload" do
     service = instance_double(
@@ -132,5 +141,63 @@ RSpec.describe "POST /route", type: :request do
         }
       }
     )
+  end
+
+  context "when API key auth is enabled" do
+    let(:configured_api_key) { "test-secret" }
+
+    it "returns unauthorized when the API key is missing" do
+      post "/route", params: valid_params, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)).to eq(
+        "error" => {
+          "code" => "authentication_error",
+          "message" => "API key is missing or invalid",
+          "details" => {}
+        }
+      )
+    end
+
+    it "returns unauthorized when the API key is invalid" do
+      post "/route", params: valid_params, headers: { "X-API-Key" => "wrong-secret" }, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)).to eq(
+        "error" => {
+          "code" => "authentication_error",
+          "message" => "API key is missing or invalid",
+          "details" => {}
+        }
+      )
+    end
+
+    it "accepts a valid API key via Authorization header" do
+      service = instance_double(
+        RoutingService,
+        route: {
+          geometry: {
+            "type" => "LineString",
+            "coordinates" => [[139.76, 35.68], [139.77, 35.69]]
+          },
+          distance_meters: 1234.5,
+          duration_seconds: 456.7,
+          provider: "graphhopper",
+          warnings: []
+        }
+      )
+
+      allow(RoutingService).to receive(:new).and_return(service)
+
+      post "/route", params: valid_params, headers: { "Authorization" => "Bearer test-secret" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "does not gate the Rails health endpoint" do
+      get "/up"
+
+      expect(response).not_to have_http_status(:unauthorized)
+    end
   end
 end

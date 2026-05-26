@@ -17,7 +17,7 @@ Phloem is a thin routing facade that normalizes route-related geospatial APIs be
 - v1 backend provider: GraphHopper only
 - Future design target: support additional adapters for OSRM-compatible and Valhalla-style providers
 - Internal design must anticipate future `match` and `capabilities` endpoints
-- Authentication is not required for the first local bring-up, but the design must leave a clean seam for fixed API-key authentication
+- Authentication is optional for local bring-up and is now available via `PHLOEM_API_KEY` on `POST /route`; `GET /up` remains unauthenticated for health checks
 - Database usage is deferred unless request history, quotas, analytics, or an admin UI become necessary
 
 ## Architectural Direction
@@ -40,8 +40,8 @@ Suggested internal structure:
 
 1. Harden the public JSON schema for `POST /route` with additional abnormal-path tests.
 2. Keep the provider interface ready for future `route`, `match`, and `capabilities` expansion.
-3. Add optional fixed API-key auth once the happy path is stable.
-4. Decide whether a minimal `/health` or `/capabilities` endpoint belongs in the next slice.
+3. Keep the optional API-key auth path stable and lightweight.
+4. Reuse Rails `GET /up` as the health check unless operational needs require a richer endpoint.
 5. Decide whether caching belongs in the first operational pass or immediately after.
 
 ## Key Constraints
@@ -56,7 +56,7 @@ Suggested internal structure:
 - exact request JSON schema for `POST /route`
 - exact normalized response format
 - whether to expose `provider` in the response body or metadata only
-- whether to add a minimal `/health` or `/capabilities` endpoint in the first implementation pass
+- whether a richer `/capabilities` endpoint is needed beyond Rails `GET /up`
 - whether caching should be added in the first milestone or immediately after
 
 ## Suggested Initial Directory Shape

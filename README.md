@@ -24,6 +24,7 @@ Environment variables used by the current MVP:
 - `GRAPH_HOPPER_BASE_URL` defaults to `http://localhost:8989`
 - `GRAPH_HOPPER_API_KEY` optional
 - `GRAPH_HOPPER_TIMEOUT_SECONDS` defaults to `5`
+- `PHLOEM_API_KEY` optional; when set, `POST /route` requires `Authorization: Bearer <key>` or `X-API-Key: <key>`
 
 GraphHopper itself is configured separately from Rails. The local GraphHopper tool lives under `tools/routing/graphhopper`.
 
@@ -131,6 +132,12 @@ Optional environment overrides:
 
 ```sh
 PHLOEM_URL=http://localhost:3000/route PROFILE=car FROM_LAT=35.68 FROM_LON=139.76 TO_LAT=35.69 TO_LON=139.77 ./scripts/route_smoke_test.sh
+```
+
+If API key auth is enabled, pass the same key to the smoke test and to your client requests. The Rails health endpoint remains available at `GET /up` without this header.
+
+```sh
+PHLOEM_API_KEY=your-shared-key ./scripts/route_smoke_test.sh
 ```
 
 ## Notes

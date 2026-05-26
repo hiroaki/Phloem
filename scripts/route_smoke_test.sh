@@ -8,6 +8,7 @@ FROM_LAT="${FROM_LAT:-35.68}"
 FROM_LON="${FROM_LON:-139.76}"
 TO_LAT="${TO_LAT:-35.69}"
 TO_LON="${TO_LON:-139.77}"
+PHLOEM_API_KEY="${PHLOEM_API_KEY:-}"
 
 payload=$(cat <<JSON
 {
@@ -22,12 +23,22 @@ JSON
 )
 
 if command -v jq >/dev/null 2>&1; then
-  curl -sS "${PHLOEM_URL}" \
-    -H 'Content-Type: application/json' \
+  curl_args=(-sS "${PHLOEM_URL}" -H 'Content-Type: application/json')
+
+  if [[ -n "${PHLOEM_API_KEY}" ]]; then
+    curl_args+=(-H "Authorization: Bearer ${PHLOEM_API_KEY}")
+  fi
+
+  curl "${curl_args[@]}" \
     -d "${payload}" | jq
 else
-  curl -sS "${PHLOEM_URL}" \
-    -H 'Content-Type: application/json' \
+  curl_args=(-sS "${PHLOEM_URL}" -H 'Content-Type: application/json')
+
+  if [[ -n "${PHLOEM_API_KEY}" ]]; then
+    curl_args+=(-H "Authorization: Bearer ${PHLOEM_API_KEY}")
+  fi
+
+  curl "${curl_args[@]}" \
     -d "${payload}"
   printf '\n'
 fi

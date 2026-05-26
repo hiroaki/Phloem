@@ -1,4 +1,6 @@
 class RoutesController < ApplicationController
+  before_action :authenticate_with_api_key!
+
   def create
     route_request = RouteRequest.new(request.request_parameters)
 
