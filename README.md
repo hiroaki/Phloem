@@ -25,6 +25,15 @@ Environment variables used by the current MVP:
 - `GRAPH_HOPPER_API_KEY` optional
 - `GRAPH_HOPPER_TIMEOUT_SECONDS` defaults to `5`
 
+GraphHopper itself is configured separately from Rails. The local GraphHopper tool lives under `tools/routing/graphhopper`.
+
+Recommended adjustments before first import:
+
+- set `graphhopper.datareader.file` to your `.osm.pbf`
+- keep `profiles` limited to the modes Phloem actually exposes
+- keep `profiles_ch` enabled for `car` so API latency stays low
+- review `graph.elevation.*` if you do not want SRTM downloads or elevation-aware routing
+
 ## API
 
 Request:
@@ -83,6 +92,32 @@ bundle install
 bundle exec rspec
 bin/rails server
 ```
+
+## GraphHopper setup
+
+Use the isolated tool directory at `tools/routing/graphhopper`.
+
+Files in that directory are intentionally self-contained so other routing servers can later live alongside it under `tools/routing/`.
+
+Place the downloaded `graphhopper-web-*.jar` in `tools/routing/graphhopper`, put your region PBF under `tools/routing/graphhopper/data`, and point `tools/routing/graphhopper/data/region.osm.pbf` at it.
+
+Example runtime expectations for the checked-in tool:
+
+- PBF input under `tools/routing/graphhopper/data`
+- imported graph cache under `tools/routing/graphhopper/graph-cache`
+- SRTM cache under `tools/routing/graphhopper/srtm`
+- logs under `tools/routing/graphhopper/logs`
+
+From `tools/routing/graphhopper`, start GraphHopper with Docker Compose:
+
+```sh
+cd tools/routing/graphhopper
+docker compose -f compose.yml up --build
+```
+
+The checked-in Compose file builds a local image from the downloaded GraphHopper JAR and mounts the local `data`, `graph-cache`, `srtm`, and `logs` directories into the container, so the tool can be started from its own directory without touching the Rails app layout.
+
+If you switch `region.osm.pbf` to a different source PBF, clear `tools/routing/graphhopper/graph-cache` before restart so GraphHopper rebuilds the import.
 
 ## Manual smoke test
 

@@ -1,0 +1,14 @@
+services:
+  graphhopper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phloem-graphhopper
+    ports:
+      - "8989:8989"
+      - "8990:8990"
+    volumes:
+      - ./data:/srv/data
+      - ./graph-cache:/srv/graph-cache
+      - ./srtm:/srv/srtm
+      - ./logs:/srv/logs

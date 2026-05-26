@@ -1,0 +1,6 @@
+data/
+graph-cache/
+logs/
+srtm/
+README.md
+compose.yml

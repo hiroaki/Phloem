@@ -24,3 +24,13 @@
 
 /coverage
 /node_modules
+
+/tools/routing/**/data/*
+!/tools/routing/**/data/.keep
+/tools/routing/**/graph-cache/*
+!/tools/routing/**/graph-cache/.keep
+/tools/routing/**/logs/*
+!/tools/routing/**/logs/.keep
+/tools/routing/**/srtm/*
+!/tools/routing/**/srtm/.keep
+/tools/routing/**/graphhopper-web-*.jar
