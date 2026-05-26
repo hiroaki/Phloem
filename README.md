@@ -144,4 +144,4 @@ PHLOEM_API_KEY=your-shared-key ./scripts/route_smoke_test.sh
 
 - The project remains intentionally stateless.
 - The public API avoids GraphHopper-specific response fields.
-- See `HANDOFF.md` and `docs/DEVELOPMENT-PLAN.md` for the broader roadmap.
+- See `docs/DEVELOPMENT.md` and `docs/DEVELOPMENT.ja.md` for project status and the next milestone plan.
