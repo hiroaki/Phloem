@@ -25,7 +25,7 @@ if allowed_cors_origins.any?
       origins(*allowed_cors_origins)
 
       resource "/route",
-        headers: %w[Content-Type Authorization],
+        headers: %w[Content-Type Authorization X-API-Key],
         methods: [:post, :options],
         max_age: 600
     end
