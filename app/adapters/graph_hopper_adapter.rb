@@ -3,6 +3,7 @@ require "net/http"
 
 class GraphHopperAdapter < RoutingProvider
   PROVIDER_NAME = "graphhopper".freeze
+  CH_ENABLED_PROFILES = %w[car].freeze
 
   def initialize(
     base_url: ENV.fetch("GRAPH_HOPPER_BASE_URL", "http://localhost:8989"),
@@ -68,12 +69,13 @@ class GraphHopperAdapter < RoutingProvider
       instructions: false,
       calc_points: true,
       points_encoded: false
-    }.merge(translated_options(options))
+    }.merge(translated_options(profile:, options:))
   end
 
-  def translated_options(options)
+  def translated_options(profile:, options:)
     translated = {}
     translated[:locale] = options[:locale] if options.is_a?(Hash) && options[:locale].is_a?(String)
+    translated[:"ch.disable"] = true unless CH_ENABLED_PROFILES.include?(profile)
     translated
   end
 

@@ -70,5 +70,49 @@ RSpec.describe GraphHopperAdapter do
         )
       end.to raise_error(UpstreamTimeoutError)
     end
+
+    it "disables CH for profiles that are not preprocessed with CH" do
+      stub_request(:post, "http://graphhopper.test/route")
+        .with(
+          body: {
+            profile: "bike",
+            points: [[139.76, 35.68], [139.77, 35.69]],
+            instructions: false,
+            calc_points: true,
+            points_encoded: false,
+            "ch.disable": true
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+        .to_return(
+          status: 200,
+          body: {
+            paths: [
+              {
+                distance: 1234.5,
+                time: 456700,
+                points: {
+                  type: "LineString",
+                  coordinates: [[139.76, 35.68], [139.77, 35.69]]
+                }
+              }
+            ]
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      adapter = described_class.new(base_url: "http://graphhopper.test", timeout: 1.0)
+
+      expect(
+        adapter.route(
+          profile: "bike",
+          points: [
+            { lat: 35.68, lon: 139.76 },
+            { lat: 35.69, lon: 139.77 }
+          ],
+          options: {}
+        )
+      ).to include(provider: "graphhopper")
+    end
   end
 end
