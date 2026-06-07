@@ -81,8 +81,8 @@ rack_attack_config = Module.new do
 
   def settings
     {
-      enabled: env_boolean('ENABLED_RACK_ATTACK', '1'),
-      get_throttle_name: 'req/ip:get',
+      enabled: env_boolean('ENABLED_RACK_ATTACK', Rails.env.test? ? '0' : '1'),
+      get_throttle_name: 'req/ip:get'
       write_throttle_name: 'req/ip:write',
       get_throttle_limit: env_positive_integer('RACK_ATTACK_GET_THROTTLE_LIMIT', 30),
       write_throttle_limit: env_positive_integer('RACK_ATTACK_WRITE_THROTTLE_LIMIT', 5),
