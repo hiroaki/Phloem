@@ -38,3 +38,4 @@ end
 
 # Rack middleware for blocking & throttling
 gem "rack-attack", "~> 6.8"
+gem "solid_cache", "~> 1.0"
