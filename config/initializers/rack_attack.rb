@@ -157,8 +157,11 @@ if rack_attack_settings[:enabled]
     }
 
     body = {
-      error: 'forbidden',
-      message: 'Access denied due to suspicious activity'
+      error: {
+        code: 'ip_banned',
+        message: 'Access denied due to suspicious activity',
+        details: { retry_after_seconds: rack_attack_settings[:ban_duration].to_i }
+      }
     }.to_json
 
     [403, headers, [body]]
