@@ -81,8 +81,8 @@ rack_attack_config = Module.new do
 
   def settings
     {
-      enabled: env_boolean('ENABLED_RACK_ATTACK', '1'),
-      get_throttle_name: 'req/ip:get',
+      enabled: env_boolean('ENABLED_RACK_ATTACK', Rails.env.test? ? '0' : '1'),
+      get_throttle_name: 'req/ip:get'
       write_throttle_name: 'req/ip:write',
       get_throttle_limit: env_positive_integer('RACK_ATTACK_GET_THROTTLE_LIMIT', 30),
       write_throttle_limit: env_positive_integer('RACK_ATTACK_WRITE_THROTTLE_LIMIT', 5),
@@ -140,8 +140,11 @@ if rack_attack_settings[:enabled]
     }
 
     body = {
-      error: 'throttled',
-      message: 'Rate limit exceeded, retry after some time'
+      error: {
+        code: 'rate_limited',
+        message: 'Rate limit exceeded',
+        details: { retry_after_seconds: rack_attack_settings[:throttle_period].to_i }
+      }
     }.to_json
 
     [429, headers, [body]]
@@ -154,8 +157,11 @@ if rack_attack_settings[:enabled]
     }
 
     body = {
-      error: 'forbidden',
-      message: 'Access denied due to suspicious activity'
+      error: {
+        code: 'ip_banned',
+        message: 'Access denied due to suspicious activity',
+        details: { retry_after_seconds: rack_attack_settings[:ban_duration].to_i }
+      }
     }.to_json
 
     [403, headers, [body]]
