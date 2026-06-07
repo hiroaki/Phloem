@@ -35,3 +35,6 @@ end
 group :test do
   gem "webmock"
 end
+
+# Rack middleware for blocking & throttling
+gem "rack-attack", "~> 6.8"
