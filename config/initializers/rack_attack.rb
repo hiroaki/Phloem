@@ -140,8 +140,11 @@ if rack_attack_settings[:enabled]
     }
 
     body = {
-      error: 'throttled',
-      message: 'Rate limit exceeded, retry after some time'
+      error: {
+        code: 'rate_limited',
+        message: 'Rate limit exceeded',
+        details: { retry_after_seconds: rack_attack_settings[:throttle_period].to_i }
+      }
     }.to_json
 
     [429, headers, [body]]
