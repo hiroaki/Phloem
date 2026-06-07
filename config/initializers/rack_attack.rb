@@ -1,4 +1,11 @@
 # rack_attack.rb - Demo purposes only: settings are deliberately strict for public access
+#
+# NOTE:
+# This rack-attack configuration is tuned for a demo site under these assumptions:
+# - Single application instance (no multi-node rate limit synchronization required)
+# - Very low traffic and mostly known visitors
+# - Aggressive blocking is acceptable for suspicious behavior
+# - Client source IP is correctly forwarded by the reverse proxy to this app
 
 # Uncomment the following lines to always allow requests from localhost.
 # All blocklists and throttles will be skipped for localhost requests.
@@ -22,8 +29,46 @@ rack_attack_config = Module.new do
     default
   end
 
-  def env_probe_path
-    %r{\A/\.env(?:\.[^/?#]+)?\z}i
+  def probe_exact_paths
+    [
+      '/.env',
+      '/.git/config',
+      '/.DS_Store',
+      '/.aws/credentials',
+      '/server-status',
+      '/v2/_catalog',
+      '/___proxy_subdomain_cpanel',
+      '/___proxy_subdomain_whm/login',
+      '/wp-login.php',
+      '/phpmyadmin',
+      '/graphql',
+      '/api',
+      '/api/graphql',
+      '/graphql/api',
+      '/api/gql'
+    ].freeze
+  end
+
+  def probe_prefixes
+    [
+      '/.git/',
+      '/.svn/',
+      '/.aws/',
+      '/ecp/'
+    ].freeze
+  end
+
+  def probe_patterns
+    [
+      %r{\A/\.env(?:\.[^/?#]+)?\z}i,
+      %r{\A/(?:api/)?(?:graphql|gql)(?:/api)?\z}i
+    ].freeze
+  end
+
+  def probe_path?(path)
+    probe_exact_paths.include?(path) ||
+      probe_prefixes.any? { |prefix| path.start_with?(prefix) } ||
+      probe_patterns.any? { |pattern| path.match?(pattern) }
   end
 
   def throttled_path_exclusions
@@ -39,11 +84,10 @@ rack_attack_config = Module.new do
       enabled: env_boolean('ENABLED_RACK_ATTACK', '1'),
       get_throttle_name: 'req/ip:get',
       write_throttle_name: 'req/ip:write',
-      get_throttle_limit: env_positive_integer('RACK_ATTACK_GET_THROTTLE_LIMIT', 300),
-      write_throttle_limit: env_positive_integer('RACK_ATTACK_WRITE_THROTTLE_LIMIT', 60),
+      get_throttle_limit: env_positive_integer('RACK_ATTACK_GET_THROTTLE_LIMIT', 30),
+      write_throttle_limit: env_positive_integer('RACK_ATTACK_WRITE_THROTTLE_LIMIT', 5),
       throttle_period: env_positive_integer('RACK_ATTACK_THROTTLE_PERIOD_SECONDS', 60).seconds,
-      ban_duration: env_positive_integer('RACK_ATTACK_BAN_DURATION_SECONDS', 600).seconds,
-      env_probe_path: env_probe_path,
+      ban_duration: env_positive_integer('RACK_ATTACK_BAN_DURATION_SECONDS', 1*60*60).seconds,
       throttled_path_exclusions: throttled_path_exclusions
     }
   end
@@ -55,9 +99,9 @@ Rack::Attack.enabled = rack_attack_settings[:enabled]
 Rack::Attack.cache.store = Rails.cache
 
 if rack_attack_settings[:enabled]
-  # Block IPs that request .env or similar sensitive files (immediate ban and cache)
-  Rack::Attack.blocklist('block env file scanners') do |req|
-    if req.path.match?(rack_attack_settings[:env_probe_path])
+  # Block IPs that hit known scanner probe paths (immediate ban and cache)
+  Rack::Attack.blocklist('block probe path scanners') do |req|
+    if rack_attack_config.probe_path?(req.path)
       Rack::Attack.cache.store.write(
         rack_attack_config.ban_cache_key(req.ip),
         '1',
