@@ -1,0 +1,81 @@
+graphhopper:
+  # Keep this path stable and switch the actual dataset via a symlink in ./data.
+  # If you repoint region.osm.pbf to a different source PBF, clear /srv/graph-cache before restart.
+  datareader.file: /srv/data/region.osm.pbf
+
+  # Keep all GraphHopper runtime artifacts inside this tool directory.
+  # This cache is tied to the imported PBF and must be rebuilt after dataset changes.
+  graph.location: /srv/graph-cache
+
+  # Phloem currently exposes car, bike, and foot routing.
+  profiles:
+    - name: car
+      custom_model_files: [car.json]
+    - name: bike
+      custom_model_files: [bike.json, bike_elevation.json]
+    - name: foot
+      custom_model_files: [foot.json, foot_elevation.json]
+
+  # CH means Contraction Hierarchies, GraphHopper's speed-mode preprocessing.
+  # Keep it enabled for car first; add bike/foot here later if their latency matters enough to justify longer imports.
+  profiles_ch:
+    - profile: car
+
+  # Leave LM disabled until you need more flexible weighting/runtime tradeoffs.
+  profiles_lm: []
+
+  graph.encoded_values: |
+    car_access, car_average_speed, country, road_class, roundabout, max_speed, road_environment,
+    foot_access, foot_average_speed, foot_priority, foot_road_access, hike_rating, average_slope,
+    bike_access, bike_average_speed, bike_priority, bike_road_access, bike_network, mtb_rating, ferry_speed
+
+  graph.elevation.provider: srtm
+  graph.elevation.cache_dir: /srv/srtm
+  graph.elevation.interpolate: bilinear
+
+  prepare.min_network_size: 200
+  prepare.subnetworks.threads: 1
+
+  routing.snap_preventions_default: tunnel, bridge, ferry
+  routing.timeout_ms: 15000
+  routing.max_visited_nodes: 1000000
+  routing.non_ch.max_waypoint_distance: 1000000
+
+  import.osm.ignored_highways: ''
+  graph.dataaccess.default_type: RAM_STORE
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 0.0.0.0
+      max_request_header_size: 50k
+  request_log:
+    appenders: []
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: 0.0.0.0
+
+logging:
+  appenders:
+    - type: file
+      time_zone: UTC
+      current_log_filename: /srv/logs/graphhopper.log
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+      archive: true
+      archived_log_filename_pattern: /srv/logs/graphhopper-%d.log.gz
+      archived_file_count: 30
+      never_block: true
+    - type: console
+      time_zone: UTC
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  loggers:
+    "com.graphhopper.osm_warnings":
+      level: DEBUG
+      additive: false
+      appenders:
+        - type: file
+          current_log_filename: /srv/logs/osm_warnings.log
+          archive: false
+          log_format: "[%level] %msg%n"

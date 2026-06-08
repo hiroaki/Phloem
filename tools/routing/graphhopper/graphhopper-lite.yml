@@ -7,26 +7,29 @@ graphhopper:
   # This cache is tied to the imported PBF and must be rebuilt after dataset changes.
   graph.location: /srv/graph-cache
 
-  # Phloem currently exposes only car routing, so keep the import lean.
+  # [CHANGES] Profiles limited to foot (pedestrian) only to reduce memory usage
+  # and import time for smaller datasets
   profiles:
-    - name: car
-      custom_model_files: [car.json]
+    - name: foot
+      custom_model_files: [foot.json]
 
-  # Precompute CH for low-latency API requests.
-  profiles_ch:
-    - profile: car
+  # [CHANGES] Contraction Hierarchies (CH) disabled to reduce import time
+  # and memory usage for foot-only routing
+  profiles_ch: []
 
   # Leave LM disabled until you need more flexible weighting/runtime tradeoffs.
   profiles_lm: []
 
+  # [CHANGES] Encoded values reduced to foot-only attributes to minimize memory footprint
+  # by excluding car/bike data
   graph.encoded_values: |
-    car_access, car_average_speed, country, road_class, roundabout, max_speed, road_environment,
-    foot_access, foot_average_speed, foot_priority, foot_road_access, hike_rating, average_slope,
-    bike_access, bike_average_speed, bike_priority, bike_road_access, bike_network, mtb_rating, ferry_speed
+    foot_access, foot_average_speed, foot_priority, foot_road_access, road_class, country, hike_rating, mtb_rating
 
-  graph.elevation.provider: srtm
-  graph.elevation.cache_dir: /srv/srtm
-  graph.elevation.interpolate: bilinear
+  # [CHANGES] Elevation disabled to reduce memory usage and simplify setup,
+  # as it's not critical for basic foot routing
+  #graph.elevation.provider: srtm
+  #graph.elevation.cache_dir: /srv/srtm
+  #graph.elevation.interpolate: bilinear
 
   prepare.min_network_size: 200
   prepare.subnetworks.threads: 1
@@ -37,7 +40,10 @@ graphhopper:
   routing.non_ch.max_waypoint_distance: 1000000
 
   import.osm.ignored_highways: ''
-  graph.dataaccess.default_type: RAM_STORE
+
+  # [CHANGES] Ensure memory usage stays low by using MMAP for graph data access,
+  # which allows larger datasets to be handled with limited RAM
+  graph.dataaccess.default_type: MMAP
 
 server:
   application_connectors:
@@ -50,27 +56,12 @@ server:
   admin_connectors:
     - type: http
       port: 8990
-      bind_host: 0.0.0.0
 
 logging:
   appenders:
-    - type: file
-      time_zone: UTC
-      current_log_filename: /srv/logs/graphhopper.log
-      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-      archive: true
-      archived_log_filename_pattern: /srv/logs/graphhopper-%d.log.gz
-      archived_file_count: 30
-      never_block: true
     - type: console
       time_zone: UTC
       log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   loggers:
     "com.graphhopper.osm_warnings":
-      level: DEBUG
-      additive: false
-      appenders:
-        - type: file
-          current_log_filename: /srv/logs/osm_warnings.log
-          archive: false
-          log_format: "[%level] %msg%n"
+      level: WARN

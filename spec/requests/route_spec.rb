@@ -9,6 +9,14 @@ RSpec.describe "POST /route", type: :request do
     original_api_key.nil? ? ENV.delete("PHLOEM_API_KEY") : ENV["PHLOEM_API_KEY"] = original_api_key
   end
 
+  around do |example|
+    original_cors_origins = ENV["PHLOEM_CORS_ORIGINS"]
+    ENV.delete("PHLOEM_CORS_ORIGINS")
+    example.run
+  ensure
+    original_cors_origins.nil? ? ENV.delete("PHLOEM_CORS_ORIGINS") : ENV["PHLOEM_CORS_ORIGINS"] = original_cors_origins
+  end
+
   let(:valid_params) do
     {
       profile: "car",
@@ -20,6 +28,16 @@ RSpec.describe "POST /route", type: :request do
     }
   end
   let(:configured_api_key) { nil }
+
+  it "does not emit CORS headers when no origins are configured" do
+    options "/route", headers: {
+      "Origin" => "https://maps.example.com",
+      "Access-Control-Request-Method" => "POST",
+      "Access-Control-Request-Headers" => "Content-Type"
+    }
+
+    expect(response.headers).not_to have_key("Access-Control-Allow-Origin")
+  end
 
   it "returns a normalized route payload" do
     service = instance_double(
