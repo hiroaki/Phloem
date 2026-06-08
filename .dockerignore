@@ -40,3 +40,19 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore JavaScript package installations.
+/node_modules
+
+# Ignore test coverage reports.
+/coverage
+
+# Ignore editor-specific settings.
+/.vscode
+/.idea
+
+# Ignore macOS Finder metadata.
+.DS_Store
+
+# Ignore project-specific utility files not required for production builds.
+/tools
