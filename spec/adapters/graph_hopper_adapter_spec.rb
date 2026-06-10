@@ -114,5 +114,52 @@ RSpec.describe GraphHopperAdapter do
         )
       ).to include(provider: "graphhopper")
     end
+
+    it "keeps requests compatible with restricted plans" do
+      stub_request(:post, "http://graphhopper.test/route")
+        .with(
+          body: {
+            profile: "foot",
+            points: [[139.76, 35.68], [139.77, 35.69]],
+            instructions: false,
+            calc_points: true,
+            points_encoded: false
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+        .to_return(
+          status: 200,
+          body: {
+            paths: [
+              {
+                distance: 1234.5,
+                time: 456700,
+                points: {
+                  type: "LineString",
+                  coordinates: [[139.76, 35.68], [139.77, 35.69]]
+                }
+              }
+            ]
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      adapter = described_class.new(
+        base_url: "http://graphhopper.test",
+        timeout: 1.0,
+        restricted_plan: true
+      )
+
+      expect(
+        adapter.route(
+          profile: "foot",
+          points: [
+            { lat: 35.68, lon: 139.76 },
+            { lat: 35.69, lon: 139.77 }
+          ],
+          options: {}
+        )
+      ).to include(provider: "graphhopper")
+    end
   end
 end
