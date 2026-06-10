@@ -38,7 +38,7 @@ env:
   REGISTRY: ghcr.io
 
 concurrency:
-  group: publish-container-image-${{ github.ref_name || github.run_id }}
+  group: publish-container-image-${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && format('-{0}', github.event.inputs.image_tag) || '' }}
   cancel-in-progress: true
 
 jobs:
