@@ -34,8 +34,6 @@ on:
       image_tag:
         description: "Container image tag"
         required: true
-        default: "manual"
-
 env:
   REGISTRY: ghcr.io
 
