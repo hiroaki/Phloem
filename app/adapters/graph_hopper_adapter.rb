@@ -8,11 +8,13 @@ class GraphHopperAdapter < RoutingProvider
   def initialize(
     base_url: ENV.fetch("GRAPH_HOPPER_BASE_URL", "http://localhost:8989"),
     api_key: ENV["GRAPH_HOPPER_API_KEY"],
-    timeout: ENV.fetch("GRAPH_HOPPER_TIMEOUT_SECONDS", "5").to_f
+    timeout: ENV.fetch("GRAPH_HOPPER_TIMEOUT_SECONDS", "5").to_f,
+    restricted_plan: ENV["GRAPH_HOPPER_RESTRICTED_PLAN"]
   )
     @base_url = base_url
     @api_key = api_key
     @timeout = timeout
+    @restricted_plan = ActiveModel::Type::Boolean.new.cast(restricted_plan)
   end
 
   def route(profile:, points:, options: {})
@@ -75,8 +77,14 @@ class GraphHopperAdapter < RoutingProvider
   def translated_options(profile:, options:)
     translated = {}
     translated[:locale] = options[:locale] if options.is_a?(Hash) && options[:locale].is_a?(String)
-    translated[:"ch.disable"] = true unless CH_ENABLED_PROFILES.include?(profile)
+    translated[:"ch.disable"] = true if should_disable_ch?(profile)
     translated
+  end
+
+  def should_disable_ch?(profile)
+    return false if @restricted_plan
+
+    !CH_ENABLED_PROFILES.include?(profile)
   end
 
   def route_uri
