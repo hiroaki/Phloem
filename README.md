@@ -24,6 +24,7 @@ Environment variables used by the current MVP:
 - `GRAPH_HOPPER_BASE_URL` defaults to `http://localhost:8989`
 - `GRAPH_HOPPER_API_KEY` optional
 - `GRAPH_HOPPER_TIMEOUT_SECONDS` defaults to `5`
+- `GRAPH_HOPPER_RESTRICTED_PLAN` defaults to `false`; enables compatibility mode for restricted GraphHopper plans. Currently this suppresses flexible-mode request parameters where needed (for example, it avoids sending `ch.disable=true`)
 - `PHLOEM_CORS_ORIGINS` optional; comma-separated list of allowed CORS origins for `POST /route`. When unset, CORS middleware is not enabled.
 - `PHLOEM_API_KEY` optional; when set, `POST /route` requires `Authorization: Bearer <key>` or `X-API-Key: <key>`
 
