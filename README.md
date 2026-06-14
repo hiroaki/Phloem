@@ -56,8 +56,18 @@ Environment variables used by the current MVP:
 - `GRAPH_HOPPER_API_KEY` optional
 - `GRAPH_HOPPER_TIMEOUT_SECONDS` defaults to `5`
 - `GRAPH_HOPPER_RESTRICTED_PLAN` defaults to `false`; enables compatibility mode for restricted GraphHopper plans. Currently this suppresses flexible-mode request parameters where needed (for example, it avoids sending `ch.disable=true`)
+- `PHLOEM_ROUTE_PROFILES` optional; comma-separated abstract profile names exposed by the API. Defaults to `car,bike,foot` when unset
+- `PHLOEM_PROFILE_MAP` optional; JSON map of abstract profile name to provider profile name. Defaults to identity mapping for `PHLOEM_ROUTE_PROFILES` (for example, `{"car":"car","bike":"bike","foot":"foot"}`)
+- `PHLOEM_PROFILE_PROBE_ON_BOOT` defaults to `true` outside test; when enabled, Phloem probes each configured profile at boot and excludes profiles that fail probe requests
+- `PHLOEM_PROFILE_PROBE_POINTS` optional; semicolon-separated `lat,lon` pairs used by boot probes (for example, `35.68,139.76;35.69,139.77`)
 - `PHLOEM_CORS_ORIGINS` optional; comma-separated list of allowed CORS origins for `POST /route`. When unset, CORS middleware is not enabled.
 - `PHLOEM_API_KEY` optional; when set, `POST /route` requires `Authorization: Bearer <key>` or `X-API-Key: <key>`
+
+Profile probing behavior:
+
+- Probe failures do not stop Phloem boot.
+- Failed profiles are excluded from request validation and route handling until the process is restarted.
+- If all profiles fail probe checks, Phloem still boots and `POST /route` returns a validation error indicating no profiles are currently available.
 
 
 ## API

@@ -3,7 +3,8 @@ class RouteRequest
 
   attr_reader :profile, :points, :options
 
-  validates :profile, presence: true, inclusion: { in: ->(_record) { RouteProfileCatalog.available_profiles } }
+  validates :profile, presence: true
+  validate :profile_is_supported
   validate :points_are_valid
   validate :options_are_valid
 
@@ -28,6 +29,20 @@ class RouteRequest
   end
 
   private
+
+  def profile_is_supported
+    return if profile.blank?
+
+    available_profiles = RouteProfileCatalog.available_profiles
+    if available_profiles.empty?
+      errors.add(:profile, "no profiles are currently available")
+      return
+    end
+
+    return if available_profiles.include?(profile.to_s)
+
+    errors.add(:profile, "is not included in the list")
+  end
 
   def points_are_valid
     unless points.is_a?(Array) && points.size >= 2
