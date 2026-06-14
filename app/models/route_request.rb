@@ -1,11 +1,9 @@
 class RouteRequest
   include ActiveModel::Model
 
-  PROFILES = %w[car bike foot].freeze
-
   attr_reader :profile, :points, :options
 
-  validates :profile, presence: true, inclusion: { in: PROFILES }
+  validates :profile, presence: true, inclusion: { in: ->(_record) { RouteProfileCatalog.available_profiles } }
   validate :points_are_valid
   validate :options_are_valid
 
