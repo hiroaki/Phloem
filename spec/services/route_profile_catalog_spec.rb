@@ -41,4 +41,15 @@ RSpec.describe RouteProfileCatalog do
     expect(described_class.available_profiles).to eq(%w[car bike])
     expect(described_class.unavailable_profiles).to eq("foot" => "upstream_error: failed")
   end
+
+  it "filters out profiles with blank mappings when probing is disabled" do
+    ENV["PHLOEM_ROUTE_PROFILES"] = "car,bike"
+    ENV["PHLOEM_PROFILE_MAP"] = { "car" => "auto", "bike" => "" }.to_json
+    described_class.reset!
+
+    described_class.use_configured_profiles!
+
+    expect(described_class.available_profiles).to eq(%w[car])
+    expect(described_class.unavailable_profiles).to eq("bike" => "profile mapping is missing")
+  end
 end

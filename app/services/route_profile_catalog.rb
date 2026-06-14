@@ -25,8 +25,19 @@ class RouteProfileCatalog
     end
 
     def use_configured_profiles!
-      @available_profiles = configured_profiles.dup
-      @unavailable_profiles = {}
+      failures = {}
+
+      @available_profiles = configured_profiles.filter_map do |abstract_profile|
+        provider_profile = provider_profile_for(abstract_profile)
+        if provider_profile.present?
+          abstract_profile
+        else
+          failures[abstract_profile] = "profile mapping is missing"
+          nil
+        end
+      end
+
+      @unavailable_profiles = failures
     end
 
     def apply_probe_result!(available_profiles:, failures:)
