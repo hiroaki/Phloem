@@ -18,6 +18,16 @@ class RoutingService
   end
 
   def route(profile:, points:, options: {})
+    available_profiles = RouteProfileCatalog.available_profiles
+
+    if available_profiles.empty?
+      raise ValidationError.new(details: { profile: ["no profiles are currently available"] })
+    end
+
+    unless available_profiles.include?(profile.to_s)
+      raise ValidationError.new(details: { profile: ["is not included in the list"] })
+    end
+
     provider_profile = RouteProfileCatalog.provider_profile_for(profile)
 
     if provider_profile.blank?

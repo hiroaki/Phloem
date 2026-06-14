@@ -52,5 +52,35 @@ RSpec.describe RoutingService do
         )
       end.to raise_error(ValidationError, "Request validation failed")
     end
+
+    it "raises a validation error when no profiles are currently available" do
+      RouteProfileCatalog.apply_probe_result!(available_profiles: [], failures: { "car" => "upstream_error" })
+
+      provider = instance_double(GraphHopperAdapter)
+      service = described_class.new(provider: provider)
+
+      expect do
+        service.route(
+          profile: "car",
+          points: [{ lat: 1.0, lon: 2.0 }, { lat: 1.1, lon: 2.1 }],
+          options: {}
+        )
+      end.to raise_error(ValidationError, "Request validation failed")
+    end
+
+    it "raises a validation error when profile is excluded from available set" do
+      RouteProfileCatalog.apply_probe_result!(available_profiles: ["car"], failures: { "bike" => "upstream_error" })
+
+      provider = instance_double(GraphHopperAdapter)
+      service = described_class.new(provider: provider)
+
+      expect do
+        service.route(
+          profile: "bike",
+          points: [{ lat: 1.0, lon: 2.0 }, { lat: 1.1, lon: 2.1 }],
+          options: {}
+        )
+      end.to raise_error(ValidationError, "Request validation failed")
+    end
   end
 end
