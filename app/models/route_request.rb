@@ -33,15 +33,10 @@ class RouteRequest
   def profile_is_supported
     return if profile.blank?
 
-    available_profiles = RouteProfileCatalog.available_profiles
-    if available_profiles.empty?
-      errors.add(:profile, "no profiles are currently available")
-      return
-    end
+    availability_error = RouteProfileCatalog.availability_error_for(profile)
+    return if availability_error.nil?
 
-    return if available_profiles.include?(profile.to_s)
-
-    errors.add(:profile, "is not included in the list")
+    errors.add(:profile, availability_error)
   end
 
   def points_are_valid

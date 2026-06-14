@@ -16,6 +16,13 @@ class RouteProfileCatalog
       provider_profile_map[abstract_profile.to_s]
     end
 
+    def availability_error_for(abstract_profile)
+      return "no profiles are currently available" if available_profiles.empty?
+      return nil if available_profiles.include?(abstract_profile.to_s)
+
+      "is not included in the list"
+    end
+
     def provider_profile_map
       @provider_profile_map ||= parsed_profile_map
     end
