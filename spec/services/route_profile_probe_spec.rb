@@ -30,10 +30,21 @@ RSpec.describe RouteProfileProbe do
     )
     allow(provider).to receive(:route).with(hash_including(profile: "foot")).and_return(provider: "graphhopper")
 
-    described_class.run!(provider:, logger: nil)
+    logger = instance_double(Logger, info: nil, warn: nil)
+
+    described_class.run!(provider:, logger: logger)
 
     expect(RouteProfileCatalog.available_profiles).to eq(%w[car foot])
     expect(RouteProfileCatalog.unavailable_profiles.keys).to contain_exactly("bike")
+    expect(logger).to have_received(:info).with(
+      "Route profile probe finished: available=2, unavailable=1"
+    )
+    expect(logger).to have_received(:info).with(
+      "Route profile probe success: profiles=car,foot"
+    )
+    expect(logger).to have_received(:warn).with(
+      "Route profile probe failure: profile=bike, reason=upstream_error: profile unavailable"
+    )
   end
 
   it "marks profile as unavailable when mapping is missing" do

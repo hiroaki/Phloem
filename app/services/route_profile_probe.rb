@@ -32,6 +32,12 @@ class RouteProfileProbe
       logger&.info(
         "Route profile probe finished: available=#{available_profiles.size}, unavailable=#{failures.size}"
       )
+      logger&.info(
+        "Route profile probe success: profiles=#{available_profiles.join(',')}"
+      )
+      failures.each do |profile, reason|
+        logger&.warn("Route profile probe failure: profile=#{profile}, reason=#{reason}")
+      end
 
       RouteProfileCatalog.available_profiles
     end
