@@ -28,6 +28,11 @@ if allowed_cors_origins.any?
         headers: %w[Content-Type Authorization X-API-Key],
         methods: [:post, :options],
         max_age: 600
+
+      resource "/provider_usage",
+        headers: %w[Content-Type Authorization X-API-Key],
+        methods: [:get, :options],
+        max_age: 600
     end
   end
 end

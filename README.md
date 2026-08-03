@@ -5,6 +5,7 @@ Phloem is a standalone Rails API-only service that acts as a thin, normalized ro
 ## Current scope
 
 - `POST /route`
+- `GET /provider_usage`
 - GraphHopper as the active provider
 - provider-neutral request validation
 - normalized GeoJSON route response
@@ -60,17 +61,22 @@ Environment variables used by the current MVP:
 - `PHLOEM_PROFILE_MAP` optional; JSON map of abstract profile name to provider profile name. Defaults to identity mapping for `PHLOEM_ROUTE_PROFILES` (for example, `{"car":"car","bike":"bike","foot":"foot"}`)
 - `PHLOEM_PROFILE_PROBE_ON_BOOT` defaults to `true` outside test; when enabled, Phloem probes each configured profile at boot and excludes profiles that fail probe requests
 - `PHLOEM_PROFILE_PROBE_POINTS` optional; semicolon-separated `lat,lon` pairs used by boot probes (for example, `35.68,139.76;35.69,139.77`)
-- `PHLOEM_CORS_ORIGINS` optional; comma-separated list of allowed CORS origins for `POST /route`. When unset, CORS middleware is not enabled.
-- `PHLOEM_API_KEY` optional; when set, `POST /route` requires `Authorization: Bearer <key>` or `X-API-Key: <key>`
+- `PHLOEM_CORS_ORIGINS` optional; comma-separated list of allowed CORS origins for endpoints. When unset, CORS middleware is not enabled.
+- `PHLOEM_API_KEY` optional; when set, `POST /route` and `GET /provider_usage` require `Authorization: Bearer <key>` or `X-API-Key: <key>`
 
-Profile probing behavior:
+**Profile probing behavior:**
 
 - Probe failures do not stop Phloem boot.
 - Failed profiles are excluded from request validation and route handling until the process is restarted.
 - If all profiles fail probe checks, Phloem still boots and `POST /route` returns a validation error indicating no profiles are currently available.
 
+**Provider usage cache behavior:**
+
+Provider usage data (`provider_usage`) is stored via Rails cache. Whether this data is shared across processes and preserved across restarts depends on the configured cache backend. In deployments where `solid_cache_store` is backed by a shared, persistent database, all application processes will observe the same latest provider usage snapshot. In local-only or non-persistent cache setups, values may differ between processes and may be lost on restart.
 
 ## API
+
+### POST /route
 
 Request:
 
@@ -120,6 +126,24 @@ Error envelope:
   }
 }
 ```
+
+### GET /provider_usage
+
+Provider usage snapshot response:
+
+```json
+{
+  "provider_usage": {
+    "provider": "graphhopper",
+    "limit": 500,
+    "remaining": 471,
+    "reset_at": "2026-08-03T23:59:59Z"
+  }
+}
+```
+
+If no usage metadata has been captured yet (or the active provider does not provide usage metadata), `provider_usage` is returned as `null`.
+
 
 ## Development Setup
 

@@ -31,4 +31,8 @@ class RoutingService
 
     @provider.route(profile: provider_profile, points:, options:)
   end
+
+  def provider_usage_snapshot
+    ProviderUsageSnapshotStore.read(provider: @provider.provider_name)
+  end
 end
