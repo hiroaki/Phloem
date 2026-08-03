@@ -61,7 +61,7 @@ Environment variables used by the current MVP:
 - `PHLOEM_PROFILE_MAP` optional; JSON map of abstract profile name to provider profile name. Defaults to identity mapping for `PHLOEM_ROUTE_PROFILES` (for example, `{"car":"car","bike":"bike","foot":"foot"}`)
 - `PHLOEM_PROFILE_PROBE_ON_BOOT` defaults to `true` outside test; when enabled, Phloem probes each configured profile at boot and excludes profiles that fail probe requests
 - `PHLOEM_PROFILE_PROBE_POINTS` optional; semicolon-separated `lat,lon` pairs used by boot probes (for example, `35.68,139.76;35.69,139.77`)
-- `PHLOEM_CORS_ORIGINS` optional; comma-separated list of allowed CORS origins for `POST /route`. When unset, CORS middleware is not enabled.
+- `PHLOEM_CORS_ORIGINS` optional; comma-separated list of allowed CORS origins for endpoints. When unset, CORS middleware is not enabled.
 - `PHLOEM_API_KEY` optional; when set, `POST /route` and `GET /provider_usage` require `Authorization: Bearer <key>` or `X-API-Key: <key>`
 
 **Profile probing behavior:**
