@@ -91,11 +91,11 @@ RSpec.describe RoutingService do
 
       expect(ProviderUsageSnapshotStore).to receive(:read)
         .with(provider: "graphhopper")
-        .and_return({ provider: "graphhopper", snapshot: { remaining: 10 } })
+        .and_return({ provider: "graphhopper", remaining: 10 })
 
       expect(service.provider_usage_snapshot).to eq(
         provider: "graphhopper",
-        snapshot: { remaining: 10 }
+        remaining: 10
       )
     end
   end
