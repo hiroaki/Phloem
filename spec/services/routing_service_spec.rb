@@ -83,4 +83,20 @@ RSpec.describe RoutingService do
       end.to raise_error(ValidationError, "Request validation failed")
     end
   end
+
+  describe "#provider_usage_snapshot" do
+    it "reads usage snapshot for the active provider" do
+      provider = instance_double(GraphHopperAdapter, provider_name: "graphhopper")
+      service = described_class.new(provider: provider)
+
+      expect(ProviderUsageSnapshotStore).to receive(:read)
+        .with(provider: "graphhopper")
+        .and_return({ provider: "graphhopper", snapshot: { remaining: 10 } })
+
+      expect(service.provider_usage_snapshot).to eq(
+        provider: "graphhopper",
+        snapshot: { remaining: 10 }
+      )
+    end
+  end
 end

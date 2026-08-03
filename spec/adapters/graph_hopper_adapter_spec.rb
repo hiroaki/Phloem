@@ -161,5 +161,52 @@ RSpec.describe GraphHopperAdapter do
         )
       ).to include(provider: "graphhopper")
     end
+
+    it "caches rate-limit headers as the latest provider usage snapshot" do
+      stub_request(:post, "http://graphhopper.test/route")
+        .to_return(
+          status: 200,
+          body: {
+            paths: [
+              {
+                distance: 1234.5,
+                time: 456700,
+                points: {
+                  type: "LineString",
+                  coordinates: [[139.76, 35.68], [139.77, 35.69]]
+                }
+              }
+            ]
+          }.to_json,
+          headers: {
+            "Content-Type" => "application/json",
+            "X-RateLimit-Limit" => "500",
+            "X-RateLimit-Remaining" => "472",
+            "X-RateLimit-Reset" => "21380",
+            "X-RateLimit-Credits" => "1"
+          }
+        )
+
+      expect(ProviderUsageSnapshotStore).to receive(:write).with(
+        provider: "graphhopper",
+        snapshot: {
+          limit: 500,
+          remaining: 472,
+          reset_seconds: 21380,
+          credits: 1
+        }
+      )
+
+      adapter = described_class.new(base_url: "http://graphhopper.test", timeout: 1.0)
+
+      adapter.route(
+        profile: "car",
+        points: [
+          { lat: 35.68, lon: 139.76 },
+          { lat: 35.69, lon: 139.77 }
+        ],
+        options: {}
+      )
+    end
   end
 end
