@@ -16,13 +16,9 @@ RSpec.describe "GET /provider_usage", type: :request do
       RoutingService,
       provider_usage_snapshot: {
         provider: "graphhopper",
-        snapshot: {
-          limit: 500,
-          remaining: 472,
-          reset_seconds: 21380,
-          credits: 1
-        },
-        captured_at: "2026-08-03T18:03:39Z"
+        limit: 500,
+        remaining: 471,
+        reset_at: "2026-08-03T23:59:59Z"
       }
     )
 
@@ -34,13 +30,9 @@ RSpec.describe "GET /provider_usage", type: :request do
     expect(JSON.parse(response.body)).to eq(
       "provider_usage" => {
         "provider" => "graphhopper",
-        "snapshot" => {
-          "limit" => 500,
-          "remaining" => 472,
-          "reset_seconds" => 21380,
-          "credits" => 1
-        },
-        "captured_at" => "2026-08-03T18:03:39Z"
+        "limit" => 500,
+        "remaining" => 471,
+        "reset_at" => "2026-08-03T23:59:59Z"
       }
     )
   end
