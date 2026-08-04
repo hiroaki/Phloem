@@ -4,6 +4,12 @@ require "net/http"
 class GraphHopperAdapter < RoutingProvider
   PROVIDER_NAME = "graphhopper".freeze
   CH_ENABLED_PROFILES = %w[car].freeze
+  RATE_LIMIT_HEADER_MAP = {
+    limit: "x-ratelimit-limit",
+    remaining: "x-ratelimit-remaining",
+    reset_seconds: "x-ratelimit-reset",
+    credits: "x-ratelimit-credits"
+  }.freeze
 
   def initialize(
     base_url: ENV.fetch("GRAPH_HOPPER_BASE_URL", "http://localhost:8989"),
@@ -19,8 +25,8 @@ class GraphHopperAdapter < RoutingProvider
 
   def route(profile:, points:, options: {})
     response = perform_request(route_uri, route_body(profile:, points:, options:))
+    cache_usage_snapshot(response)
     payload = parse_json(response.body)
-
     unless response.is_a?(Net::HTTPSuccess)
       raise UpstreamError.new(
         message: payload["message"] || "Routing provider returned an error",
@@ -127,6 +133,42 @@ class GraphHopperAdapter < RoutingProvider
     return {} if body.to_s.empty?
 
     JSON.parse(body)
+  end
+
+  def cache_usage_snapshot(response)
+    snapshot = usage_snapshot_from_response(response)
+    return if snapshot.nil?
+
+    ProviderUsageSnapshotStore.write(provider: PROVIDER_NAME, snapshot: snapshot)
+  rescue StandardError => error
+    Rails.logger.warn(
+      "GraphHopperAdapter failed to cache usage snapshot: #{error.class}: #{error.message}"
+    )
+  end
+
+  def usage_snapshot_from_response(response)
+    snapshot = RATE_LIMIT_HEADER_MAP.each_with_object({}) do |(key, header_name), memo|
+      header_value = extract_header_value(response, header_name)
+      next if header_value.nil?
+
+      memo[key] = parse_integer(header_value) || header_value
+    end
+
+    snapshot.empty? ? nil : snapshot
+  end
+
+  def extract_header_value(response, header_name)
+    values = response.get_fields(header_name)
+    value = Array(values).first
+    return nil if value.to_s.empty?
+
+    value
+  end
+
+  def parse_integer(value)
+    Integer(value, 10)
+  rescue ArgumentError, TypeError
+    nil
   end
 
   def extract_warnings(payload)

@@ -1,11 +1,10 @@
 class RouteRequest
   include ActiveModel::Model
 
-  PROFILES = %w[car bike foot].freeze
-
   attr_reader :profile, :points, :options
 
-  validates :profile, presence: true, inclusion: { in: PROFILES }
+  validates :profile, presence: true
+  validate :profile_is_supported
   validate :points_are_valid
   validate :options_are_valid
 
@@ -30,6 +29,15 @@ class RouteRequest
   end
 
   private
+
+  def profile_is_supported
+    return if profile.blank?
+
+    availability_error = RouteProfileCatalog.availability_error_for(profile)
+    return if availability_error.nil?
+
+    errors.add(:profile, availability_error)
+  end
 
   def points_are_valid
     unless points.is_a?(Array) && points.size >= 2
