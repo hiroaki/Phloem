@@ -18,7 +18,8 @@ RSpec.describe "GET /provider_usage", type: :request do
         provider: "graphhopper",
         limit: 500,
         remaining: 471,
-        reset_at: "2026-08-03T23:59:59Z"
+        reset_at: "2026-08-03T23:59:59Z",
+        captured_at: "2026-08-03T18:03:39Z"
       }
     )
 
@@ -32,7 +33,8 @@ RSpec.describe "GET /provider_usage", type: :request do
         "provider" => "graphhopper",
         "limit" => 500,
         "remaining" => 471,
-        "reset_at" => "2026-08-03T23:59:59Z"
+        "reset_at" => "2026-08-03T23:59:59Z",
+        "captured_at" => "2026-08-03T18:03:39Z"
       }
     )
   end

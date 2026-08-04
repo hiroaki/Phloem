@@ -32,7 +32,9 @@ class ProviderUsageSnapshotStore
         reset_at: reset_at
       }.compact
 
-      normalized.empty? ? nil : normalized
+      return nil if normalized.empty?
+
+      normalized.merge(captured_at: captured_at.utc.iso8601)
     end
 
     def effective_remaining(snapshot)
